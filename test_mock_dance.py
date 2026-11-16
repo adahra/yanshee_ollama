@@ -155,10 +155,31 @@ def test_main_test_mode_uses_dry_run_api(monkeypatch):
     assert dance_sequence.main(["--test"]) == 0
 
 
-def test_main_installs_request_timeout(monkeypatch):
+def test_main_returns_one_when_button_wait_fails(monkeypatch):
+    monkeypatch.setattr(dance_sequence.yan_api, "get_robot_battery_value",
+                        lambda: 87)
+    monkeypatch.setattr(dance_sequence, "wait_for_power_button", lambda *a, **k: False)
+
+    assert dance_sequence.main(["--ip", "127.0.0.1"]) == 1
+
+
+def test_main_installs_request_timeout_by_default(monkeypatch):
     installed = []
     monkeypatch.setattr(dance_sequence.request_timeout, "install",
-                        lambda: installed.append(True))
+                        lambda timeout=dance_sequence.request_timeout.DEFAULT_TIMEOUT:
+                        installed.append(timeout))
 
     assert dance_sequence.main(["--test"]) == 0
-    assert installed, "main() must install the request timeout guard"
+    assert installed == [dance_sequence.request_timeout.DEFAULT_TIMEOUT]
+
+
+def test_main_timeout_option_installs_custom_timeout(monkeypatch):
+    captured = {}
+
+    def fake_install(timeout=dance_sequence.request_timeout.DEFAULT_TIMEOUT):
+        captured["timeout"] = timeout
+
+    monkeypatch.setattr(dance_sequence.request_timeout, "install", fake_install)
+
+    assert dance_sequence.main(["--test", "--timeout", "2.5"]) == 0
+    assert captured["timeout"] == (2.5, 2.5)

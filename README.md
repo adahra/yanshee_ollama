@@ -21,33 +21,38 @@ Yanshee is a versatile robotic platform designed for education, research, and ho
 
 ## Installation
 
+This repository is the SDK itself (a single module, `YanAPI.py`) plus a small
+demo. Install its runtime dependencies:
+
 ```bash
-pip install yan-api-sdk
+pip install requests nest_asyncio opencv-python
 ```
+
+Python 3.10+ is expected (the SDK uses `nest_asyncio` and `cv2`).
 
 ## Getting Started
 
 ### 1. Initialize the SDK
 
 ```python
-from yan_api import YanAPI
+import YanAPI as yan_api
 
-# Initialize with robot IP (replace with actual robot IP)
-YanAPI.yan_api_init("192.168.1.100")
+# Initialize with the robot IP (replace with the actual robot IP)
+yan_api.yan_api_init("192.168.1.100")
 ```
 
 ### 2. Basic Robot Control
 
 ```python
 # Get battery status
-battery_info = YanAPI.get_robot_battery_info()
+battery_info = yan_api.get_robot_battery_info()
 print("Battery: " + str(battery_info["data"]["percent"]) + "%")
 
 # Play a movement
-YanAPI.sync_play_motion("wave")
+yan_api.sync_play_motion("wave")
 
 # Check vision status
-aprilTag_status = YanAPI.get_aprilTag_recognition_status()
+aprilTag_status = yan_api.get_aprilTag_recognition_status()
 ```
 
 ### 3. Advanced Motion Control
@@ -86,7 +91,7 @@ YanAPI.sync_do_motion_gait(speed_v=2, speed_h=1, steps=10, period=2)
 - **Music**: `sync_play_music()`, `upload_media_music()`
 - **Voice**: Through Voice class for speech recognition and synthesis
 
-## Class Structure
+## Data & Controller Classes
 
 ### Core Data Classes
 - `RobotBatteryInfo`: Battery voltage, charging state, percentage
@@ -186,6 +191,28 @@ The robot supports layered motion systems:
 - Real-time AprilTag detection with pose estimation
 - QR code content recognition
 - Object tracking with configurable timeout parameters
+
+## Network Timeouts
+
+`YanAPI.py` issues HTTP requests without a `timeout=` argument. To avoid
+blocking forever on an unresponsive robot, this repo ships
+`request_timeout.py`, which wraps the `requests` helpers in place (without
+editing the SDK):
+
+```python
+import request_timeout
+request_timeout.install()                 # default (3.05s connect, 10s read)
+request_timeout.install(timeout=(2, 5))   # custom
+```
+
+`dance_sequence.py` installs it automatically and exposes `--timeout`.
+
+## Running Tests
+
+```bash
+pip install pytest
+python3 -m pytest -q
+```
 
 ## License
 

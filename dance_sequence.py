@@ -201,6 +201,9 @@ def build_arg_parser():
                         help="Yanshee IP address (default: 127.0.0.1)")
     parser.add_argument("--test", action="store_true",
                         help="dry run: simulate the button and every call locally")
+    parser.add_argument("--timeout", type=float, default=None,
+                        help="override network timeout in seconds for both connect and read "
+                             "(default: 3.05 / 10)")
     # Backwards compatibility: `python3 dance_sequence.py test`
     parser.add_argument("mode", nargs="?", choices=["test"],
                         help=argparse.SUPPRESS)
@@ -209,8 +212,11 @@ def build_arg_parser():
 
 def main(argv=None, api=None):
     """Run the button-triggered dance sequence. Returns a process exit code."""
-    request_timeout.install()
     args = build_arg_parser().parse_args(argv)
+    timeout = ((args.timeout, args.timeout)
+               if args.timeout is not None
+               else request_timeout.DEFAULT_TIMEOUT)
+    request_timeout.install(timeout=timeout)
     test_mode = args.test or args.mode == "test"
 
     print("=" * 60)
