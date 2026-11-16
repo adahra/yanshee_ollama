@@ -153,3 +153,12 @@ def test_main_test_mode_uses_dry_run_api(monkeypatch):
 
     monkeypatch.setattr(dance_sequence, "yan_api", NetworkGuard())
     assert dance_sequence.main(["--test"]) == 0
+
+
+def test_main_installs_request_timeout(monkeypatch):
+    installed = []
+    monkeypatch.setattr(dance_sequence.request_timeout, "install",
+                        lambda: installed.append(True))
+
+    assert dance_sequence.main(["--test"]) == 0
+    assert installed, "main() must install the request timeout guard"

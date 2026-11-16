@@ -26,6 +26,7 @@ import sys
 import time
 
 import YanAPI as yan_api
+import request_timeout
 
 POLL_INTERVAL = 0.5
 MAX_CONSECUTIVE_FAILURES = 10
@@ -208,6 +209,7 @@ def build_arg_parser():
 
 def main(argv=None, api=None):
     """Run the button-triggered dance sequence. Returns a process exit code."""
+    request_timeout.install()
     args = build_arg_parser().parse_args(argv)
     test_mode = args.test or args.mode == "test"
 
